@@ -153,7 +153,7 @@ if [ -d "$firefox_dir" ]; then
             
             # Clean storage cache (website-specific caches)
             if [ -d "$profile/storage/default" ]; then
-                for site_cache in "$profile/storage/default"*/cache; do
+                for site_cache in "$profile/storage/default"/*/cache; do
                     if [ -d "$site_cache" ]; then
                         site_name=$(basename $(dirname "$site_cache"))
                         clean_directory "$site_cache" "Firefox storage cache: ${site_name:0:40}..."
