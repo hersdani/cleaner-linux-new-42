@@ -61,7 +61,7 @@ This script is **safe to run** and will not break any programs. Here's why:
 
 1. Run the script:
    ```bash
-   ~/Documents/scripts/cleaner-linux-new-42/cleaner-42.sh
+   ./cleaner-42.sh
    ```
 
 2. If any programs (VSCode, Slack, Discord, Chrome, Firefox) are running, the script will:
@@ -88,11 +88,11 @@ The [original cleaner-linux-42](https://github.com/hersdani/cleaner-linux-42) wa
 
 ```bash
 # Clone the repository
-cd ~/Documents/scripts
-git clone https://github.com/hersdani/cleaner-linux-new-42.git cleaner-linux-new-42
+cd ~/Documents/scripts (or any other path you choose)
+git clone https://github.com/hersdani/cleaner-linux-new-42.git
 
 # Make the script executable
-chmod +x ~/Documents/scripts/cleaner-linux-new-42/cleaner-42.sh
+chmod u+x ~/Documents/scripts/cleaner-linux-new-42/cleaner-42.sh
 
 # Run it
 ~/Documents/scripts/cleaner-linux-new-42/cleaner-42.sh
@@ -125,7 +125,7 @@ Done!
 
 - Run this script regularly (weekly or when quota is running low)
 - Close applications before running for best results
-- Check your quota with: `du -sh ~`
+- Check your used quota with: `du -sh ~` or `ncdu`
 
 ## 📜 License
 
