@@ -70,17 +70,23 @@ cleaned_count=0
 clean_directory() {
     local dir="$1"
     local description="$2"
+    local silent="$3"  # If set to "silent", don't print individual messages
 
     if [ -d "$dir" ]; then
         local size_before=$(du -s "$dir" 2>/dev/null | awk '{print $1}')
         if [ -n "$size_before" ] && [ "$size_before" -gt 0 ]; then
-            echo -e "${YELLOW}Cleaning: ${description}${NC}"
+            if [ "$silent" != "silent" ]; then
+                echo -e "${YELLOW}Cleaning: ${description}${NC}"
+            fi
             find "$dir" -mindepth 1 -delete 2>/dev/null
             cleaned_count=$((cleaned_count + 1))
             local size_after=$(du -s "$dir" 2>/dev/null | awk '{print $1}')
             local freed=$((size_before - size_after))
             if [ "$freed" -gt 0 ]; then
-                echo -e "${GREEN}  ✓ Freed: $(numfmt --to=iec-i --suffix=B "$((freed * 1024))" 2>/dev/null || echo "${freed}KB")${NC}"
+                if [ "$silent" != "silent" ]; then
+                    echo -e "${GREEN}  ✓ Freed: $(numfmt --to=iec-i --suffix=B "$((freed * 1024))" 2>/dev/null || echo "${freed}KB")${NC}"
+                fi
+                echo "$freed"  # Return the freed amount for accumulation
             fi
         fi
     fi
@@ -103,65 +109,139 @@ clean_files_by_pattern() {
 }
 
 echo "=== System Cache ==="
-clean_directory "$HOME/.cache" "User cache directory"
+if [ -d "$HOME/.cache" ] && [ "$(find "$HOME/.cache" -mindepth 1 -type f 2>/dev/null | head -1)" ]; then
+    clean_directory "$HOME/.cache" "User cache directory"
+else
+    echo "No cache files found"
+fi
 echo ""
 
 echo "=== VSCode ==="
-clean_directory "$HOME/.config/Code/Cache" "VSCode Cache"
-clean_directory "$HOME/.config/Code/CachedData" "VSCode Cached Data"
-clean_directory "$HOME/.config/Code/CachedExtensions" "VSCode Cached Extensions"
-clean_directory "$HOME/.config/Code/CachedExtensionVSIXs" "VSCode Cached Extension VSIXs"
-clean_directory "$HOME/.config/Code/logs" "VSCode Logs"
-clean_directory "$HOME/.vscode/extensions/.obsolete" "VSCode Obsolete Extensions"
+vscode_found=false
+for dir in "$HOME/.config/Code/Cache" "$HOME/.config/Code/CachedData" "$HOME/.config/Code/CachedExtensions" "$HOME/.config/Code/CachedExtensionVSIXs" "$HOME/.config/Code/logs" "$HOME/.vscode/extensions/.obsolete"; do
+    if [ -d "$dir" ] && [ "$(find "$dir" -mindepth 1 2>/dev/null | head -1)" ]; then
+        vscode_found=true
+        break
+    fi
+done
+if [ "$vscode_found" = true ]; then
+    clean_directory "$HOME/.config/Code/Cache" "VSCode Cache"
+    clean_directory "$HOME/.config/Code/CachedData" "VSCode Cached Data"
+    clean_directory "$HOME/.config/Code/CachedExtensions" "VSCode Cached Extensions"
+    clean_directory "$HOME/.config/Code/CachedExtensionVSIXs" "VSCode Cached Extension VSIXs"
+    clean_directory "$HOME/.config/Code/logs" "VSCode Logs"
+    clean_directory "$HOME/.vscode/extensions/.obsolete" "VSCode Obsolete Extensions"
+else
+    echo "No cache files found"
+fi
 echo ""
 
 echo "=== Slack ==="
-clean_directory "$HOME/.config/Slack/Cache" "Slack Cache"
-clean_directory "$HOME/.config/Slack/Code Cache" "Slack Code Cache"
-clean_directory "$HOME/.config/Slack/Service Worker/CacheStorage" "Slack Service Worker Cache"
-clean_directory "$HOME/.config/Slack/logs" "Slack Logs"
+slack_found=false
+for dir in "$HOME/.config/Slack/Cache" "$HOME/.config/Slack/Code Cache" "$HOME/.config/Slack/Service Worker/CacheStorage" "$HOME/.config/Slack/logs"; do
+    if [ -d "$dir" ] && [ "$(find "$dir" -mindepth 1 2>/dev/null | head -1)" ]; then
+        slack_found=true
+        break
+    fi
+done
+if [ "$slack_found" = true ]; then
+    clean_directory "$HOME/.config/Slack/Cache" "Slack Cache"
+    clean_directory "$HOME/.config/Slack/Code Cache" "Slack Code Cache"
+    clean_directory "$HOME/.config/Slack/Service Worker/CacheStorage" "Slack Service Worker Cache"
+    clean_directory "$HOME/.config/Slack/logs" "Slack Logs"
+else
+    echo "No cache files found"
+fi
 echo ""
 
 echo "=== Discord ==="
-clean_directory "$HOME/.config/discord/Cache" "Discord Cache"
-clean_directory "$HOME/.config/discord/Code Cache" "Discord Code Cache"
-clean_directory "$HOME/.config/discord/GPUCache" "Discord GPU Cache"
-clean_directory "$HOME/.config/discord/logs" "Discord Logs"
+discord_found=false
+for dir in "$HOME/.config/discord/Cache" "$HOME/.config/discord/Code Cache" "$HOME/.config/discord/GPUCache" "$HOME/.config/discord/logs"; do
+    if [ -d "$dir" ] && [ "$(find "$dir" -mindepth 1 2>/dev/null | head -1)" ]; then
+        discord_found=true
+        break
+    fi
+done
+if [ "$discord_found" = true ]; then
+    clean_directory "$HOME/.config/discord/Cache" "Discord Cache"
+    clean_directory "$HOME/.config/discord/Code Cache" "Discord Code Cache"
+    clean_directory "$HOME/.config/discord/GPUCache" "Discord GPU Cache"
+    clean_directory "$HOME/.config/discord/logs" "Discord Logs"
+else
+    echo "No cache files found"
+fi
 echo ""
 
 echo "=== Google Chrome ==="
-clean_directory "$HOME/.config/google-chrome/Default/Cache" "Chrome Cache"
-clean_directory "$HOME/.config/google-chrome/Default/Code Cache" "Chrome Code Cache"
-clean_directory "$HOME/.config/google-chrome/Default/GPUCache" "Chrome GPU Cache"
-clean_directory "$HOME/.config/google-chrome/Default/Service Worker/CacheStorage" "Chrome Service Worker Cache"
-clean_directory "$HOME/.config/google-chrome/ShaderCache" "Chrome Shader Cache"
+chrome_found=false
+for dir in "$HOME/.config/google-chrome/Default/Cache" "$HOME/.config/google-chrome/Default/Code Cache" "$HOME/.config/google-chrome/Default/GPUCache" "$HOME/.config/google-chrome/Default/Service Worker/CacheStorage" "$HOME/.config/google-chrome/ShaderCache"; do
+    if [ -d "$dir" ] && [ "$(find "$dir" -mindepth 1 2>/dev/null | head -1)" ]; then
+        chrome_found=true
+        break
+    fi
+done
+if [ "$chrome_found" = true ]; then
+    clean_directory "$HOME/.config/google-chrome/Default/Cache" "Chrome Cache"
+    clean_directory "$HOME/.config/google-chrome/Default/Code Cache" "Chrome Code Cache"
+    clean_directory "$HOME/.config/google-chrome/Default/GPUCache" "Chrome GPU Cache"
+    clean_directory "$HOME/.config/google-chrome/Default/Service Worker/CacheStorage" "Chrome Service Worker Cache"
+    clean_directory "$HOME/.config/google-chrome/ShaderCache" "Chrome Shader Cache"
+else
+    echo "No cache files found"
+fi
 echo ""
 
 echo "=== Firefox ==="
 # Find Firefox profile(s)
 firefox_dir="$HOME/.mozilla/firefox"
+firefox_total_freed=0
+firefox_found=false
+
 if [ -d "$firefox_dir" ]; then
     # Clean each profile's cache (matches pattern: xxxxxxxx.username)
     for profile in "$firefox_dir"/*.*; do
         if [ -d "$profile" ] && [[ "$(basename "$profile")" =~ ^[a-z0-9]+\.[a-z0-9_-]+$ ]]; then
             profile_name=$(basename "$profile")
             
-            # Clean traditional cache directories
-            clean_directory "$profile/cache2" "Firefox cache2 ($profile_name)"
-            clean_directory "$profile/startupCache" "Firefox startup cache ($profile_name)"
-            clean_directory "$profile/thumbnails" "Firefox thumbnails ($profile_name)"
+            # Clean traditional cache directories (silently accumulate)
+            for cache_dir in "$profile/cache2" "$profile/startupCache" "$profile/thumbnails"; do
+                if [ -d "$cache_dir" ]; then
+                    size_before=$(du -s "$cache_dir" 2>/dev/null | awk '{print $1}')
+                    if [ -n "$size_before" ] && [ "$size_before" -gt 0 ]; then
+                        firefox_found=true
+                        find "$cache_dir" -mindepth 1 -delete 2>/dev/null
+                        cleaned_count=$((cleaned_count + 1))
+                        size_after=$(du -s "$cache_dir" 2>/dev/null | awk '{print $1}')
+                        freed=$((size_before - size_after))
+                        firefox_total_freed=$((firefox_total_freed + freed))
+                    fi
+                fi
+            done
             
             # Clean storage cache (website-specific caches)
             if [ -d "$profile/storage/default" ]; then
                 for site_cache in "$profile/storage/default"/*/cache; do
                     if [ -d "$site_cache" ]; then
-                        site_name=$(basename $(dirname "$site_cache"))
-                        clean_directory "$site_cache" "Firefox storage cache: ${site_name:0:40}..."
+                        size_before=$(du -s "$site_cache" 2>/dev/null | awk '{print $1}')
+                        if [ -n "$size_before" ] && [ "$size_before" -gt 0 ]; then
+                            firefox_found=true
+                            find "$site_cache" -mindepth 1 -delete 2>/dev/null
+                            cleaned_count=$((cleaned_count + 1))
+                            size_after=$(du -s "$site_cache" 2>/dev/null | awk '{print $1}')
+                            freed=$((size_before - size_after))
+                            firefox_total_freed=$((firefox_total_freed + freed))
+                        fi
                     fi
                 done
             fi
         fi
     done
+fi
+
+if [ "$firefox_found" = true ] && [ "$firefox_total_freed" -gt 0 ]; then
+    echo -e "${GREEN}✓ Cleaned Firefox cache - Freed: $(numfmt --to=iec-i --suffix=B "$((firefox_total_freed * 1024))" 2>/dev/null || echo "${firefox_total_freed}KB")${NC}"
+else
+    echo "No cache files found"
 fi
 echo ""
 
