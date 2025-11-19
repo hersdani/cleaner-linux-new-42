@@ -37,7 +37,7 @@ fi
 if pgrep -x "chrome" > /dev/null || pgrep -x "google-chrome" > /dev/null; then
     running_programs+=("Chrome")
 fi
-if pgrep -x "firefox" > /dev/null; then
+if pgrep -x "firefox" > /dev/null || pgrep -x "firefox-bin" > /dev/null; then
     running_programs+=("Firefox")
 fi
 
@@ -141,13 +141,25 @@ echo "=== Firefox ==="
 # Find Firefox profile(s)
 firefox_dir="$HOME/.mozilla/firefox"
 if [ -d "$firefox_dir" ]; then
-    # Clean each profile's cache
-    for profile in "$firefox_dir"/*.default* "$firefox_dir"/*.dev-edition-default*; do
-        if [ -d "$profile" ]; then
+    # Clean each profile's cache (matches pattern: xxxxxxxx.username)
+    for profile in "$firefox_dir"/*.*; do
+        if [ -d "$profile" ] && [[ "$(basename "$profile")" =~ ^[a-z0-9]+\.[a-z0-9_-]+$ ]]; then
             profile_name=$(basename "$profile")
-            clean_directory "$profile/cache2" "Firefox cache ($profile_name)"
+            
+            # Clean traditional cache directories
+            clean_directory "$profile/cache2" "Firefox cache2 ($profile_name)"
             clean_directory "$profile/startupCache" "Firefox startup cache ($profile_name)"
             clean_directory "$profile/thumbnails" "Firefox thumbnails ($profile_name)"
+            
+            # Clean storage cache (website-specific caches)
+            if [ -d "$profile/storage/default" ]; then
+                for site_cache in "$profile/storage/default"*/cache; do
+                    if [ -d "$site_cache" ]; then
+                        site_name=$(basename $(dirname "$site_cache"))
+                        clean_directory "$site_cache" "Firefox storage cache: ${site_name:0:40}..."
+                    fi
+                done
+            fi
         fi
     done
 fi
