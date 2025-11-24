@@ -86,7 +86,6 @@ clean_directory() {
                 if [ "$silent" != "silent" ]; then
                     echo -e "${GREEN}  ✓ Freed: $(numfmt --to=iec-i --suffix=B "$((freed * 1024))" 2>/dev/null || echo "${freed}KB")${NC}"
                 fi
-                echo "$freed"  # Return the freed amount for accumulation
             fi
         fi
     fi
@@ -186,6 +185,17 @@ if [ "$chrome_found" = true ]; then
     clean_directory "$HOME/.config/google-chrome/Default/GPUCache" "Chrome GPU Cache"
     clean_directory "$HOME/.config/google-chrome/Default/Service Worker/CacheStorage" "Chrome Service Worker Cache"
     clean_directory "$HOME/.config/google-chrome/ShaderCache" "Chrome Shader Cache"
+    
+    # Clean Singleton lock files (only if Chrome is not running)
+    if ! pgrep -x "chrome" > /dev/null && ! pgrep -x "google-chrome" > /dev/null; then
+        singleton_items=$(find "$HOME/.config/google-chrome" -maxdepth 1 \( -type f -o -type l \) -name "Singleton*" 2>/dev/null)
+        if [ -n "$singleton_items" ]; then
+            echo -e "${YELLOW}Cleaning: Chrome Singleton lock files${NC}"
+            echo "$singleton_items" | xargs rm -f 2>/dev/null
+            echo -e "${GREEN}  ✓ Removed stale lock files${NC}"
+            cleaned_count=$((cleaned_count + 1))
+        fi
+    fi
 else
     echo "No cache files found"
 fi
