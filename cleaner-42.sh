@@ -185,7 +185,7 @@ if [ "$chrome_found" = true ]; then
     clean_directory "$HOME/.config/google-chrome/Default/GPUCache" "Chrome GPU Cache"
     clean_directory "$HOME/.config/google-chrome/Default/Service Worker/CacheStorage" "Chrome Service Worker Cache"
     clean_directory "$HOME/.config/google-chrome/ShaderCache" "Chrome Shader Cache"
-    
+
     # Clean Singleton lock files (only if Chrome is not running)
     if ! pgrep -x "chrome" > /dev/null && ! pgrep -x "google-chrome" > /dev/null; then
         singleton_items=$(find "$HOME/.config/google-chrome" -maxdepth 1 \( -type f -o -type l \) -name "Singleton*" 2>/dev/null)
@@ -212,7 +212,7 @@ if [ -d "$firefox_dir" ]; then
     for profile in "$firefox_dir"/*.*; do
         if [ -d "$profile" ] && [[ "$(basename "$profile")" =~ ^[a-z0-9]+\.[a-z0-9_-]+$ ]]; then
             profile_name=$(basename "$profile")
-            
+
             # Clean traditional cache directories (silently accumulate)
             for cache_dir in "$profile/cache2" "$profile/startupCache" "$profile/thumbnails"; do
                 if [ -d "$cache_dir" ]; then
@@ -227,7 +227,7 @@ if [ -d "$firefox_dir" ]; then
                     fi
                 fi
             done
-            
+
             # Clean storage cache (website-specific caches)
             if [ -d "$profile/storage/default" ]; then
                 for site_cache in "$profile/storage/default"/*/cache; do
@@ -249,7 +249,8 @@ if [ -d "$firefox_dir" ]; then
 fi
 
 if [ "$firefox_found" = true ] && [ "$firefox_total_freed" -gt 0 ]; then
-    echo -e "${GREEN}✓ Cleaned Firefox cache - Freed: $(numfmt --to=iec-i --suffix=B "$((firefox_total_freed * 1024))" 2>/dev/null || echo "${firefox_total_freed}KB")${NC}"
+    echo -e "${YELLOW}Cleaning: Firefox Cache${NC}"
+    echo -e "${GREEN}  ✓ Freed: $(numfmt --to=iec-i --suffix=B "$((firefox_total_freed * 1024))" 2>/dev/null || echo "${firefox_total_freed}KB")${NC}"
 else
     echo "No cache files found"
 fi
